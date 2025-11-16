@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chirpley 3D - Interactive Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(to bottom, #071024, #071834);
+            color: white;
+        }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .overlay {
+            position: relative;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .overlay > * {
+            pointer-events: auto;
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            z-index: 30;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        nav {
+            display: flex;
+            gap: 16px;
+            opacity: 0.9;
+        }
+
+        nav a {
+            font-size: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            color: white;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .connect-btn {
+            padding: 6px 16px;
+            border-radius: 9999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .connect-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Hero Text */
+        .hero-text {
+            position: fixed;
+            left: 32px;
+            top: 33%;
+            z-index: 30;
+            max-width: 450px;
+        }
+
+        .hero-text h1 {
+            font-size: 48px;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+
+        .hero-text p {
+            font-size: 14px;
+            opacity: 0.8;
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-primary {
+            padding: 12px 24px;
+            border-radius: 8px;
+            background: white;
+            color: black;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Social Links */
+        .social-links {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 30;
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .social-links span {
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .social-links span:hover {
+            opacity: 1;
+        }
+
+        /* Instructions Box */
+        .instructions {
+            position: fixed;
+            top: 50%;
+            right: 32px;
+            transform: translateY(-50%);
+            z-index: 30;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 280px;
+        }
+
+        .instructions h3 {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+
+        .instructions ul {
+            list-style: none;
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* Footer */
+        footer {
+            position: fixed;
+            bottom: 12px;
+            right: 24px;
+            font-size: 11px;
+            opacity: 0.6;
+            z-index: 30;
+        }
+
+        /* Card Labels */
+        .card-label {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: center;
+            width: 180px;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .card-label h3 {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 4px;
+        }
+
+        .card-label p {
+            font-size: 11px;
+            opacity: 0.8;
+            color: #2a2a2a;
+        }
+
+        @media (max-width: 768px) {
+            .hero-text h1 {
+                font-size: 36px;
+            }
+            
+            nav {
+                display: none;
+            }
+
+            .instructions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 3D Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- UI Overlay -->
+    <div class="overlay">
+        <!-- Header -->
+        <header>
+            <div class="logo-nav">
+                <div class="logo">Chirpley 3D</div>
+                <nav>
+                    <a>Vision</a>
+                    <a>Platform</a>
+                    <a>Launch App</a>
+                </nav>
+            </div>
+            <button class="connect-btn" id="connectBtn">Connect</button>
+        </header>
+
+        <!-- Hero Text -->
+        <div class="hero-text">
+            <h1>Nano = MEGA</h1>
+            <p>Get in touch with your audience using micro & nano influencers. Easy connect with your platform.</p>
+            <div class="hero-buttons">
+                <button class="btn-primary">Launch App</button>
+                <button class="btn-secondary">Media Kits</button>
+            </div>
+        </div>
+
+        <!-- Social Links -->
+        <div class="social-links">
+            <span>Discord</span>
+            <span>Twitter</span>
+            <span>Instagram</span>
+        </div>
+
+        <!-- Instructions -->
+        <div class="instructions">
+            <h3>🎮 Controles Interactivos</h3>
+            <ul>
+                <li>🖱️ <strong>Arrastra</strong> para rotar la cámara</li>
+                <li>👆 <strong>Mueve el mouse</strong> para parallax</li>
+                <li>✨ Las tarjetas flotan automáticamente</li>
+                <li>🔘 Haz clic en "Connect" arriba</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <footer>Website by Numbered.studio — demo</footer>
+    </div>
+
+    <!-- Card Labels (will be positioned by JS) -->
+    <div id="label1" class="card-label" style="display: none;">
+        <h3>Nano = MEGA</h3>
+        <p>Demo description text</p>
+    </div>
+    <div id="label2" class="card-label" style="display: none;">
+        <h3>AI Matching</h3>
+        <p>Demo description text</p>
+    </div>
+    <div id="label3" class="card-label" style="display: none;">
+        <h3>1-Click Campaigns</h3>
+        <p>Demo description text</p>
+    </div>
+
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        camera.position.set(0, 0.6, 6);
+
+        // Lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+        scene.add(ambientLight);
+
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+        directionalLight.position.set(5, 5, 5);
+        directionalLight.castShadow = true;
+        directionalLight.shadow.mapSize.width = 1024;
+        directionalLight.shadow.mapSize.height = 1024;
+        scene.add(directionalLight);
+
+        // Create floating cards
+        const cards = [];
+        const cardData = [
+            { position: [-2.4, 0.2, -0.2], rotation: [0, 0.3, 0], color: 0x4a90e2, label: 'label1' },
+            { position: [0, 0.4, -0.5], rotation: [0, -0.1, 0], color: 0xf39c12, label: 'label2' },
+            { position: [2.4, -0.1, 0.2], rotation: [0, -0.5, 0], color: 0xe74c3c, label: 'label3' }
+        ];
+
+        cardData.forEach(data => {
+            const geometry = new THREE.PlaneGeometry(2.2, 1.3, 32, 32);
+            const material = new THREE.MeshStandardMaterial({
+                color: data.color,
+                metalness: 0.2,
+                roughness: 0.6,
+                side: THREE.DoubleSide
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            
+            mesh.position.set(...data.position);
+            mesh.rotation.set(...data.rotation);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            
+            mesh.userData = {
+                initialY: data.position[1],
+                floatSpeed: 0.7 + Math.random() * 0.3,
+                rotationSpeed: 0.1,
+                labelId: data.label
+            };
+            
+            scene.add(mesh);
+            cards.push(mesh);
+        });
+
+        // Mouse tracking for parallax
+        const mouse = { x: 0, y: 0 };
+        document.addEventListener('mousemove', (event) => {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        });
+
+        // Drag controls
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let cameraRotation = { x: 0, y: 0 };
+
+        renderer.domElement.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.clientX - previousMousePosition.x;
+                const deltaY = e.clientY - previousMousePosition.y;
+                
+                cameraRotation.y += deltaX * 0.005;
+                cameraRotation.x += deltaY * 0.005;
+                
+                cameraRotation.x = Math.max(-Math.PI / 6, Math.min(Math.PI / 6, cameraRotation.x));
+                
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Connect button
+        let connected = false;
+        document.getElementById('connectBtn').addEventListener('click', function() {
+            connected = !connected;
+            this.textContent = connected ? 'Disconnect' : 'Connect';
+        });
+
+        // Update card labels position
+        function updateLabels() {
+            cards.forEach(card => {
+                const vector = new THREE.Vector3();
+                vector.setFromMatrixPosition(card.matrixWorld);
+                vector.y -= 0.9;
+                vector.project(camera);
+
+                const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+
+                const label = document.getElementById(card.userData.labelId);
+                if (vector.z < 1) {
+                    label.style.display = 'block';
+                    label.style.left = x + 'px';
+                    label.style.top = y + 'px';
+                } else {
+                    label.style.display = 'none';
+                }
+            });
+        }
+
+        // Animation loop
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            const elapsedTime = clock.getElapsedTime();
+            
+            // Animate cards
+            cards.forEach((card, index) => {
+                card.rotation.y += card.userData.rotationSpeed * 0.01;
+                card.position.y = card.userData.initialY + Math.sin(elapsedTime * card.userData.floatSpeed + index) * 0.1;
+            });
+
+            // Parallax camera
+            const targetX = mouse.x * 0.5;
+            const targetY = mouse.y * 0.5;
+            camera.position.x += (targetX - camera.position.x) * 0.05;
+            camera.position.y += (targetY + 0.6 - camera.position.y) * 0.05;
+
+            // Apply drag rotation
+            const radius = 6;
+            camera.position.x = radius * Math.sin(cameraRotation.y) * Math.cos(cameraRotation.x);
+            camera.position.z = radius * Math.cos(cameraRotation.y) * Math.cos(cameraRotation.x);
+            camera.position.y = radius * Math.sin(cameraRotation.x) + 0.6;
+            
+            camera.lookAt(0, 0, 0);
+
+            updateLabels();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>
